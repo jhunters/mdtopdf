@@ -22,6 +22,7 @@ package mdtopdf
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"io/fs"
@@ -327,6 +328,33 @@ func (r *PdfRenderer) Process(content []byte) error {
 	}
 
 	return nil
+}
+func (r *PdfRenderer) ProcessBuffer(content []byte) ([]byte, error) {
+	// try to open tracer
+	var f *os.File
+	var err error
+	if r.tracerFile != "" {
+		f, err = os.Create(r.tracerFile)
+		if err != nil {
+			return nil, fmt.Errorf("os.Create() on tracefile error:%v", err)
+		}
+		defer f.Close()
+		r.w = bufio.NewWriter(f)
+		defer r.w.Flush()
+	}
+
+	err = r.Run(content)
+	if err != nil {
+		return nil, fmt.Errorf("error on %v:%v", r.pdfFile, err)
+	}
+
+	buff := new(bytes.Buffer)
+	err = r.Pdf.Output(buff)
+	if err != nil {
+		return nil, fmt.Errorf("error on %v:%v", r.pdfFile, err)
+	}
+
+	return buff.Bytes(), nil
 }
 
 // Run takes the markdown content, parses it but don't generate the PDF. you can access the PDF with youRenderer.Pdf

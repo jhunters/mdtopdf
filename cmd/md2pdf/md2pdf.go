@@ -13,7 +13,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/mandolyte/mdtopdf"
+	"github.com/jhunters/mdtopdf"
 )
 
 var input = flag.String("i", "", "Input filename or HTTP(s) URL; default is os.Stdin")
