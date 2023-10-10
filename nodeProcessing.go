@@ -20,6 +20,7 @@
 package mdtopdf
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -100,12 +101,17 @@ func (r *PdfRenderer) processCodeblock(node ast.CodeBlock) {
 	currentStyle := r.cs.peek().textStyle
 	r.setStyler(currentStyle)
 
-	var isValidSyntaxHighlightBaseDir bool = false
-	if stat, err := os.Stat(r.SyntaxHighlightBaseDir); err == nil && stat.IsDir() {
-		isValidSyntaxHighlightBaseDir = true
-	}
+	// var isValidSyntaxHighlightBaseDir bool = false
+	// if stat, err := os.Stat(r.SyntaxHighlightBaseDir); err == nil && stat.IsDir() {
+	// 	isValidSyntaxHighlightBaseDir = true
+	// }
 
-	if len(node.Info) < 1 || !isValidSyntaxHighlightBaseDir {
+	// if len(node.Info) < 1 || !isValidSyntaxHighlightBaseDir {
+	// 	r.outputUnhighlightedCodeBlock(string(node.Literal))
+	// 	return
+	// }
+
+	if r.SyntaxHighlightBaseDir == nil {
 		r.outputUnhighlightedCodeBlock(string(node.Literal))
 		return
 	}
@@ -113,12 +119,32 @@ func (r *PdfRenderer) processCodeblock(node ast.CodeBlock) {
 	if strings.HasPrefix(string(node.Literal), "<script") && string(node.Info) == "html" {
 		node.Info = []byte("javascript")
 	}
-	syntaxFile, lerr := ioutil.ReadFile(r.SyntaxHighlightBaseDir + "/" + string(node.Info) + ".yaml")
+
+	yfile, lerr := r.SyntaxHighlightBaseDir.Open(string(node.Info) + ".yaml")
 	if lerr != nil {
 		r.outputUnhighlightedCodeBlock(string(node.Literal))
 		return
 	}
-	syntaxDef, _ := highlight.ParseDef(syntaxFile)
+
+	// 创建一个缓冲区来存储文件内容
+	buffer := make([]byte, 1024)
+	syntaxFile := new(bytes.Buffer)
+	for {
+		// 从文件中读取数据到缓冲区
+		n, err := yfile.Read(buffer)
+		if err == io.EOF {
+			break // 文件读取完毕
+		}
+		if err != nil {
+			r.outputUnhighlightedCodeBlock(string(node.Literal))
+			return
+		}
+
+		// 处理读取到的数据，这里将其打印到控制台
+		syntaxFile.Write(buffer[:n])
+	}
+
+	syntaxDef, _ := highlight.ParseDef(syntaxFile.Bytes())
 	h := highlight.NewHighlighter(syntaxDef)
 	matches := h.HighlightString(string(node.Literal))
 	r.cr()
@@ -278,7 +304,7 @@ func (r *PdfRenderer) processItem(node ast.ListItem, entering bool) {
 func (r *PdfRenderer) processEmph(node ast.Node, entering bool) {
 	if entering {
 		r.tracer("Emph (entering)", "")
-		r.cs.peek().textStyle.Style += "i"
+		// r.cs.peek().textStyle.Style += "i"
 	} else {
 		r.tracer("Emph (leaving)", "")
 		r.cs.peek().textStyle.Style = strings.ReplaceAll(
@@ -289,7 +315,7 @@ func (r *PdfRenderer) processEmph(node ast.Node, entering bool) {
 func (r *PdfRenderer) processStrong(node ast.Node, entering bool) {
 	if entering {
 		r.tracer("Strong (entering)", "")
-		r.cs.peek().textStyle.Style += "b"
+		// r.cs.peek().textStyle.Style += "b"
 	} else {
 		r.tracer("Strong (leaving)", "")
 		r.cs.peek().textStyle.Style = strings.ReplaceAll(

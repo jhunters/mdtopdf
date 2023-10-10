@@ -21,6 +21,7 @@ package mdtopdf
 
 import (
 	"io/ioutil"
+	"os"
 	"path"
 	"strings"
 	"testing"
@@ -44,10 +45,10 @@ func testit(inputf string, gohighlight bool, t *testing.T) {
 	var r *PdfRenderer
 	var opts []RenderOption
 	if gohighlight {
-		opts := []RenderOption{IsHorizontalRuleNewPage(true), SetSyntaxHighlightBaseDir("./highlight/syntax_files")}
-		r = NewPdfRenderer("", "", pdffile, tracerfile, opts, LIGHT)
+		opts := []RenderOption{IsHorizontalRuleNewPage(true), SetSyntaxHighlightBaseDir(os.DirFS("./highlight/syntax_files"))}
+		r = NewPdfRenderer("", "", pdffile, tracerfile, "Arial", opts, LIGHT)
 	} else {
-		r = NewPdfRenderer("", "", pdffile, tracerfile, opts, LIGHT)
+		r = NewPdfRenderer("", "", pdffile, tracerfile, "Arial", opts, LIGHT)
 	}
 	err = r.Process(content)
 	if err != nil {

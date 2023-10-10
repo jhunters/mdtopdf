@@ -23,7 +23,7 @@ var title = flag.String("title", "", "Presentation title")
 var author = flag.String("author", "", "Author; used if -footer is passed")
 var unicodeSupport = flag.String("unicode-encoding", "", "e.g 'cp1251'")
 var fontFile = flag.String("font-file", "", "path to font file to use")
-var fontName = flag.String("font-name", "", "Font name ID; e.g 'Helvetica-1251'")
+var fontName = flag.String("font-name", "Arial", "Font name ID; e.g 'Helvetica-1251'")
 var themeArg = flag.String("theme", "light", "[light|dark]")
 var hrAsNewPage = flag.Bool("new-page-on-hr", false, "Interpret HR as a new page; useful for presentations")
 var printFooter = flag.Bool("with-footer", false, "Print doc footer (author  title  page number)")
@@ -61,7 +61,7 @@ func main() {
 		usage("Output PDF filename is required")
 	}
 
-	if *hrAsNewPage == true {
+	if *hrAsNewPage {
 		opts = append(opts, mdtopdf.IsHorizontalRuleNewPage(true))
 	}
 
@@ -69,11 +69,11 @@ func main() {
 		opts = append(opts, mdtopdf.WithUnicodeTranslator(*unicodeSupport))
 	}
 
-	if *pathToSyntaxFiles != "" {
-		opts = append(opts, mdtopdf.SetSyntaxHighlightBaseDir(*pathToSyntaxFiles))
-	} else {
-		opts = append(opts, mdtopdf.SetSyntaxHighlightBaseDir("../../highlight/syntax_files"))
-	}
+	// if *pathToSyntaxFiles != "" {
+	// 	opts = append(opts, mdtopdf.SetSyntaxHighlightBaseDir(*pathToSyntaxFiles))
+	// } else {
+	// 	opts = append(opts, mdtopdf.SetSyntaxHighlightBaseDir("../../highlight/syntax_files"))
+	// }
 
 	// get text for PDF
 	var content []byte
@@ -112,7 +112,7 @@ func main() {
 		fillColor = mdtopdf.Colorlookup("black")
 	}
 
-	pf := mdtopdf.NewPdfRenderer(*orientation, *pageSize, *output, *logFile, opts, theme)
+	pf := mdtopdf.NewPdfRenderer(*orientation, *pageSize, *output, *logFile, *fontName, opts, theme)
 	if inputBaseURL != "" {
 		pf.InputBaseURL = inputBaseURL
 	}
@@ -120,9 +120,12 @@ func main() {
 	pf.Pdf.SetTitle(*title, true)
 	pf.BackgroundColor = mdtopdf.Colorlookup(backgroundColor)
 
-	if *fontFile != "" && *fontName != "" {
-		pf.Pdf.AddFont(*fontName, "", *fontFile)
-		pf.Pdf.SetFont(*fontName, "", 12)
+	if *fontName != "" {
+		pf.Pdf.AddUTF8Font(*fontName, "", "")
+		pf.Pdf.AddUTF8Font(*fontName, "b", "")
+		pf.Pdf.AddUTF8Font(*fontName, "i", "")
+		pf.Pdf.AddUTF8Font(*fontName, "bi", "")
+		// pf.Pdf.SetFont(*fontName, "", 12)
 		pf.Normal = mdtopdf.Styler{Font: *fontName, Style: "",
 			Size: 12, Spacing: 2,
 			FillColor: fillColor,

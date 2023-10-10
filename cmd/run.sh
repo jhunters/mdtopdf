@@ -1,2 +1,2 @@
 #!/bin/sh
-go run convert.go -i test.md -o test.pdf 
+go run md2pdf.go -i test.md -o test.pdf 

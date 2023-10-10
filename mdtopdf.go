@@ -24,6 +24,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"reflect"
 	"strings"
@@ -118,7 +119,7 @@ type PdfRenderer struct {
 	NeedCodeStyleUpdate       bool
 	NeedBlockquoteStyleUpdate bool
 	HorizontalRuleNewPage     bool
-	SyntaxHighlightBaseDir    string
+	SyntaxHighlightBaseDir    fs.FS
 	InputBaseURL              string
 	Theme                     Theme
 	BackgroundColor           Color
@@ -126,111 +127,111 @@ type PdfRenderer struct {
 }
 
 // SetLightTheme sets theme to 'light'
-func (r *PdfRenderer) SetLightTheme() {
+func (r *PdfRenderer) SetLightTheme(fontName string) {
 	r.BackgroundColor = Colorlookup("white")
 	r.SetPageBackground("", r.BackgroundColor)
 	// Normal Text
-	r.Normal = Styler{Font: "Arial", Style: "", Size: 12, Spacing: 2,
+	r.Normal = Styler{Font: fontName, Style: "", Size: 12, Spacing: 2,
 		TextColor: Colorlookup("black"), FillColor: Colorlookup("white")}
 
 	// Link text
-	r.Link = Styler{Font: "Arial", Style: "b", Size: 12, Spacing: 2,
+	r.Link = Styler{Font: fontName, Style: "b", Size: 12, Spacing: 2,
 		TextColor: Colorlookup("cornflowerblue")}
 
 	// Backticked text
-	r.Backtick = Styler{Font: "Courier", Style: "", Size: 12, Spacing: 2,
+	r.Backtick = Styler{Font: fontName, Style: "", Size: 12, Spacing: 2,
 		TextColor: Color{37, 27, 14}, FillColor: Color{200, 200, 200}}
 
 	// Quoted Text
 
-	r.Blockquote = Styler{Font: "Courier", Style: "", Size: 12, Spacing: 2,
+	r.Blockquote = Styler{Font: fontName, Style: "", Size: 12, Spacing: 2,
 		TextColor: Color{37, 27, 14}, FillColor: Color{200, 200, 200}}
 
 	// Code text
-	r.Code = Styler{Font: "Courier", Style: "", Size: 12, Spacing: 2,
+	r.Code = Styler{Font: fontName, Style: "", Size: 12, Spacing: 2,
 		TextColor: Color{37, 27, 14}, FillColor: Color{200, 200, 200}}
 
 	// Headings
-	r.H1 = Styler{Font: "Arial", Style: "b", Size: 24, Spacing: 5,
+	r.H1 = Styler{Font: fontName, Style: "b", Size: 24, Spacing: 5,
 		TextColor: Colorlookup("black"), FillColor: Colorlookup("white")}
-	r.H2 = Styler{Font: "Arial", Style: "b", Size: 22, Spacing: 5,
+	r.H2 = Styler{Font: fontName, Style: "b", Size: 22, Spacing: 5,
 		TextColor: Colorlookup("black"), FillColor: Colorlookup("white")}
-	r.H3 = Styler{Font: "Arial", Style: "b", Size: 20, Spacing: 5,
+	r.H3 = Styler{Font: fontName, Style: "b", Size: 20, Spacing: 5,
 		TextColor: Colorlookup("black"), FillColor: Colorlookup("white")}
-	r.H4 = Styler{Font: "Arial", Style: "b", Size: 18, Spacing: 5,
+	r.H4 = Styler{Font: fontName, Style: "b", Size: 18, Spacing: 5,
 		TextColor: Colorlookup("black"), FillColor: Colorlookup("white")}
-	r.H5 = Styler{Font: "Arial", Style: "b", Size: 16, Spacing: 5,
+	r.H5 = Styler{Font: fontName, Style: "b", Size: 16, Spacing: 5,
 		TextColor: Colorlookup("black"), FillColor: Colorlookup("white")}
-	r.H6 = Styler{Font: "Arial", Style: "b", Size: 14, Spacing: 5,
+	r.H6 = Styler{Font: fontName, Style: "b", Size: 14, Spacing: 5,
 		TextColor: Colorlookup("black"), FillColor: Colorlookup("white")}
 
-	r.Blockquote = Styler{Font: "Arial", Style: "i", Size: 12, Spacing: 2,
+	r.Blockquote = Styler{Font: fontName, Style: "i", Size: 12, Spacing: 2,
 		TextColor: Colorlookup("black"), FillColor: Colorlookup("white")}
 
 	// Table Header Text
-	r.THeader = Styler{Font: "Arial", Style: "B", Size: 12, Spacing: 2,
+	r.THeader = Styler{Font: fontName, Style: "", Size: 12, Spacing: 2,
 		TextColor: Colorlookup("black"), FillColor: Color{180, 180, 180}}
 
 	// Table Body Text
-	r.TBody = Styler{Font: "Arial", Style: "", Size: 12, Spacing: 2,
+	r.TBody = Styler{Font: fontName, Style: "", Size: 12, Spacing: 2,
 		TextColor: Colorlookup("black"), FillColor: Color{240, 240, 240}}
 
 }
 
 // SetDarkTheme sets theme to 'dark'
-func (r *PdfRenderer) SetDarkTheme() {
+func (r *PdfRenderer) SetDarkTheme(fontName string) {
 	r.BackgroundColor = Colorlookup("black")
 	r.SetPageBackground("", r.BackgroundColor)
 	// Normal Text
-	r.Normal = Styler{Font: "Arial", Style: "", Size: 12, Spacing: 2,
+	r.Normal = Styler{Font: fontName, Style: "", Size: 12, Spacing: 2,
 		FillColor: Colorlookup("black"), TextColor: Colorlookup("white")}
 
 	// Quoted Text
-	r.Blockquote = Styler{Font: "Arial", Style: "", Size: 12, Spacing: 2,
+	r.Blockquote = Styler{Font: fontName, Style: "", Size: 12, Spacing: 2,
 		FillColor: Colorlookup("black"), TextColor: Colorlookup("white")}
 
 	// Link text
-	r.Link = Styler{Font: "Arial", Style: "b", Size: 12, Spacing: 2,
+	r.Link = Styler{Font: fontName, Style: "b", Size: 12, Spacing: 2,
 		TextColor: Colorlookup("cornflowerblue")}
 
 	// Backticked text
-	r.Backtick = Styler{Font: "Courier", Style: "", Size: 12, Spacing: 2,
+	r.Backtick = Styler{Font: fontName, Style: "", Size: 12, Spacing: 2,
 		TextColor: Colorlookup("lightgrey"), FillColor: Color{32, 35, 37}}
 
 	// Code text
-	r.Code = Styler{Font: "Courier", Style: "", Size: 12, Spacing: 2,
+	r.Code = Styler{Font: fontName, Style: "", Size: 12, Spacing: 2,
 		TextColor: Colorlookup("lightgrey"), FillColor: Color{32, 35, 37}}
 
 	// Headings
-	r.H1 = Styler{Font: "Arial", Style: "b", Size: 24, Spacing: 5,
+	r.H1 = Styler{Font: fontName, Style: "b", Size: 24, Spacing: 5,
 		FillColor: Colorlookup("black"), TextColor: Colorlookup("darkgray")}
-	r.H2 = Styler{Font: "Arial", Style: "b", Size: 22, Spacing: 5,
+	r.H2 = Styler{Font: fontName, Style: "b", Size: 22, Spacing: 5,
 		FillColor: Colorlookup("black"), TextColor: Colorlookup("darkgray")}
-	r.H3 = Styler{Font: "Arial", Style: "b", Size: 20, Spacing: 5,
+	r.H3 = Styler{Font: fontName, Style: "b", Size: 20, Spacing: 5,
 		FillColor: Colorlookup("black"), TextColor: Colorlookup("darkgray")}
-	r.H4 = Styler{Font: "Arial", Style: "b", Size: 18, Spacing: 5,
+	r.H4 = Styler{Font: fontName, Style: "b", Size: 18, Spacing: 5,
 		FillColor: Colorlookup("black"), TextColor: Colorlookup("darkgray")}
-	r.H5 = Styler{Font: "Arial", Style: "b", Size: 16, Spacing: 5,
+	r.H5 = Styler{Font: fontName, Style: "b", Size: 16, Spacing: 5,
 		FillColor: Colorlookup("black"), TextColor: Colorlookup("darkgray")}
-	r.H6 = Styler{Font: "Arial", Style: "b", Size: 14, Spacing: 5,
+	r.H6 = Styler{Font: fontName, Style: "b", Size: 14, Spacing: 5,
 		FillColor: Colorlookup("black"), TextColor: Colorlookup("darkgray")}
 
-	r.Blockquote = Styler{Font: "Arial", Style: "i", Size: 12, Spacing: 2,
+	r.Blockquote = Styler{Font: fontName, Style: "i", Size: 12, Spacing: 2,
 		FillColor: Colorlookup("black"), TextColor: Colorlookup("darkgray")}
 
 	// Table Header Text
-	r.THeader = Styler{Font: "Arial", Style: "B", Size: 12, Spacing: 2,
+	r.THeader = Styler{Font: fontName, Style: "", Size: 12, Spacing: 2,
 		TextColor: Colorlookup("darkgray"), FillColor: Color{27, 27, 27}}
 
 	// Table Body Text
-	r.TBody = Styler{Font: "Arial", Style: "", Size: 12, Spacing: 2,
+	r.TBody = Styler{Font: fontName, Style: "", Size: 12, Spacing: 2,
 		FillColor: Color{200, 200, 200}, TextColor: Color{128, 128, 128}}
 
 }
 
 // NewPdfRenderer creates and configures an PdfRenderer object,
 // which satisfies the Renderer interface.
-func NewPdfRenderer(orient, papersz, pdfFile, tracerFile string, opts []RenderOption, theme Theme) *PdfRenderer {
+func NewPdfRenderer(orient, papersz, pdfFile, tracerFile, fontName string, opts []RenderOption, theme Theme) *PdfRenderer {
 
 	r := new(PdfRenderer)
 
@@ -266,9 +267,9 @@ func NewPdfRenderer(orient, papersz, pdfFile, tracerFile string, opts []RenderOp
 	r.Pdf.AddPage()
 	switch r.Theme {
 	case DARK:
-		r.SetDarkTheme()
+		r.SetDarkTheme(fontName)
 	case LIGHT:
-		r.SetLightTheme()
+		r.SetLightTheme(fontName)
 	}
 	// set default font
 	r.setStyler(r.Normal)
@@ -297,7 +298,7 @@ func NewPdfRendererWithDefaultStyler(orient, papersz, pdfFile, tracerFile string
 		r.Normal = defaultStyler
 	})
 
-	return NewPdfRenderer(orient, papersz, pdfFile, tracerFile, opts, theme)
+	return NewPdfRenderer(orient, papersz, pdfFile, tracerFile, defaultStyler.Font, opts, theme)
 }
 
 // Process takes the markdown content, parses it to generate the PDF
@@ -510,7 +511,7 @@ func IsHorizontalRuleNewPage(value bool) RenderOption {
 }
 
 // SetSyntaxHighlightBaseDir path to https://github.com/jessp01/gohighlight/tree/master/syntax_files
-func SetSyntaxHighlightBaseDir(path string) RenderOption {
+func SetSyntaxHighlightBaseDir(path fs.FS) RenderOption {
 	return func(r *PdfRenderer) {
 		r.SyntaxHighlightBaseDir = path
 	}
